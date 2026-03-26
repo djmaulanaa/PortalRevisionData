@@ -86,15 +86,16 @@ function renderTable() {
         <td class="p-2">${item.Name || '-'}</td>
         <td class="p-2">${item.RevisionType || '-'}</td>
         <td class="p-2">${item.PIT || '-'}</td>
-        <td class="p-2">${item.UnitType || '-'}</td>
         <td class="p-2">${item.UnitID || '-'}</td>
         <td class="p-2">${item.RitationAct || '-'}</td>
         <td class="p-2">${item.DistanceAct || '-'}</td>
         <td class="p-2">${item.SMUStart || '-'}</td>
         <td class="p-2">${item.SMUEnd || '-'}</td>
         <td class="p-2">${item.DisposalName || '-'}</td>
-        <td class="p-2">${item.NoHP || '-'}</td>
         <td class="p-2">${item.Description || '-'}</td>
+        <td class="p-2">
+          <a href="${item.Url || '#'}" target="_blank" class="text-blue-500 underline">View</a>
+        </td>
         <td class="p-2">
           <span class="text-white px-2 py-1 rounded ${statusColor}">
             ${item.Status || 'Pending'}
