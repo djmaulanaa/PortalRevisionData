@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Analysis</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 p-6">
+
+  <h1 class="text-2xl font-bold mb-6">Dashboard Analysis</h1>
+
+  <!-- KPI -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white p-4 rounded shadow text-center">
+      <p>Total</p><h2 id="totalData" class="text-2xl font-bold">0</h2>
+    </div>
+    <div class="bg-yellow-100 p-4 rounded shadow text-center">
+      <p>Pending</p><h2 id="pendingData">0</h2>
+    </div>
+    <div class="bg-green-100 p-4 rounded shadow text-center">
+      <p>Approved</p><h2 id="approvedData">0</h2>
+    </div>
+    <div class="bg-red-100 p-4 rounded shadow text-center">
+      <p>Rejected</p><h2 id="rejectedData">0</h2>
+    </div>
+  </div>
+
+  <!-- RATE -->
+  <div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="bg-white p-4 rounded shadow">
+      Approval Rate: <b id="approvalRate">0%</b>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      Reject Rate: <b id="rejectRate">0%</b>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="grid md:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="font-bold mb-2">Trend Harian</h2>
+      <canvas id="trendChart"></canvas>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="font-bold mb-2">Revision Type</h2>
+      <canvas id="typeChart"></canvas>
+    </div>
+  </div>
+
+  <!-- AGING -->
+  <div class="bg-white p-4 rounded shadow">
+    <h2 class="font-bold mb-2">Pending Aging</h2>
+    <ul id="agingList"></ul>
+  </div>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

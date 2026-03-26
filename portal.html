@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Revision Monitoring</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-gray-100 p-6">
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">Revision Portal</h1>
+    
+    <div class="flex items-center gap-3">
+      <span id="userInfo" class="text-sm bg-white px-3 py-1 rounded shadow"></span>
+      <button onclick="logout()" class="bg-red-500 text-white px-3 py-1 rounded">
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-xl shadow text-center">
+      <p>Total</p><h2 id="totalData" class="text-2xl font-bold">0</h2>
+    </div>
+    <div class="bg-yellow-100 p-4 rounded-xl shadow text-center">
+      <p>Pending</p><h2 id="pendingData">0</h2>
+    </div>
+    <div class="bg-green-100 p-4 rounded-xl shadow text-center">
+      <p>Approved</p><h2 id="approvedData">0</h2>
+    </div>
+    <div class="bg-red-100 p-4 rounded-xl shadow text-center">
+      <p>Rejected</p><h2 id="rejectedData">0</h2>
+    </div>
+  </div>
+
+  <!-- RATE -->
+  <div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-xl shadow">
+      Approval Rate: <b id="approvalRate">0%</b>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow">
+      Reject Rate: <b id="rejectRate">0%</b>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="grid md:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white p-4 rounded-xl shadow">
+      <h2 class="font-bold mb-2">Trend Harian</h2>
+      <canvas id="trendChart"></canvas>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl shadow">
+      <h2 class="font-bold mb-2">Revision Type</h2>
+      <canvas id="typeChart"></canvas>
+    </div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="mb-4 flex gap-3 items-center">
+    <label class="font-semibold text-sm">Filter Status:</label>
+    <select id="filterStatus" class="border p-2 rounded">
+      <option value="ALL">All</option>
+      <option value="Pending">Pending</option>
+      <option value="Approved">Approved</option>
+      <option value="Rejected">Rejected</option>
+    </select>
+  </div>
+
+  <!-- TABLE -->
+  <div class="overflow-x-auto bg-white rounded-xl shadow mb-4">
+    <table class="min-w-full text-xs">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="p-2">Date</th>
+          <th class="p-2">Shift</th>
+          <th class="p-2">SN</th>
+          <th class="p-2">Name</th>
+          <th class="p-2">Type</th>
+          <th class="p-2">PIT</th>
+          <th class="p-2">UnitType</th>
+          <th class="p-2">UnitID</th>
+          <th class="p-2">Ritase</th>
+          <th class="p-2">Distance</th>
+          <th class="p-2">SMU Start</th>
+          <th class="p-2">SMU End</th>
+          <th class="p-2">Disposal</th>
+          <th class="p-2">No HP</th>
+          <th class="p-2">Desc</th>
+          <th class="p-2">Status</th>
+          <th class="p-2">Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- PAGINATION -->
+  <div class="flex justify-between items-center mb-6">
+    <button onclick="prevPage()" class="bg-gray-300 px-3 py-1 rounded">Prev</button>
+    <span id="pageInfo"></span>
+    <button onclick="nextPage()" class="bg-gray-300 px-3 py-1 rounded">Next</button>
+  </div>
+
+
+  <!-- MODAL -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center">
+    <div class="bg-white p-6 rounded-xl w-96">
+      <h2 class="text-lg font-bold mb-4">Edit Revision</h2>
+
+      <div class="mb-3 text-sm bg-gray-100 p-3 rounded">
+        <p><b>Last Revised By:</b> <span id="oldRevisedName">-</span></p>
+        <p><b>Last Feedback:</b> <span id="oldFeedback">-</span></p>
+      </div>
+
+      <input id="revisedSN" class="w-full border p-2 mb-2 rounded bg-gray-100" readonly>
+      <input id="revisedName" class="w-full border p-2 mb-2 rounded bg-gray-100" readonly>
+
+      <select id="status" class="w-full border p-2 mb-2 rounded">
+        <option>Pending</option>
+        <option>Approved</option>
+        <option>Rejected</option>
+      </select>
+
+      <textarea id="feedback" class="w-full border p-2 mb-2 rounded" placeholder="Feedback"></textarea>
+
+      <div class="flex justify-end gap-2">
+        <button onclick="closeModal()" class="px-4 py-2 bg-gray-300 rounded">Cancel</button>
+        <button onclick="saveData()" class="px-4 py-2 bg-blue-500 text-white rounded">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>
