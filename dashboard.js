@@ -8,13 +8,32 @@ const supabase = createClient(
 const tableName = 'ComplainDataOperator'
 
 async function loadDashboard() {
-  const { data, error } = await supabase
-    .from(tableName)
-    .select('*')
+  let data = []
+  let from = 0
+  let to = 999
+  let hasMore = true
 
-  if (error) {
-    console.log(error)
-    return
+  // Looping untuk mengambil data secara bertahap (per 1000 data)
+  while (hasMore) {
+    const { data: chunk, error } = await supabase
+      .from(tableName)
+      .select('*')
+      .range(from, to)
+
+    if (error) {
+      console.error("Gagal mengambil data:", error)
+      return
+    }
+
+    data = data.concat(chunk)
+
+    // Jika data yang didapat kurang dari 1000, berarti sudah di halaman terakhir
+    if (chunk.length < 1000) {
+      hasMore = false
+    } else {
+      from += 1000
+      to += 1000
+    }
   }
 
   // ================= KPI =================
@@ -46,6 +65,7 @@ async function loadDashboard() {
   const labels = Object.keys(trendMap).sort()
   const values = labels.map(l => trendMap[l])
 
+  // Pastikan untuk menghancurkan chart lama jika fungsi ini dipanggil berulang kali
   new Chart(document.getElementById('trendChart'), {
     type: 'line',
     data: {
