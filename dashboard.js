@@ -7,6 +7,11 @@ const supabase = createClient(
 
 const tableName = 'ComplainDataOperator'
 
+// Variabel simpan instance chart agar bisa di-destroy jika re-render
+let trendChartInstance = null
+let typeChartInstance = null
+let revisedNameChartInstance = null
+
 async function loadDashboard() {
   let data = []
   let from = 0
@@ -27,7 +32,6 @@ async function loadDashboard() {
 
     data = data.concat(chunk)
 
-    // Jika data yang didapat kurang dari 1000, berarti sudah di halaman terakhir
     if (chunk.length < 1000) {
       hasMore = false
     } else {
@@ -65,16 +69,24 @@ async function loadDashboard() {
   const labels = Object.keys(trendMap).sort()
   const values = labels.map(l => trendMap[l])
 
-  // Pastikan untuk menghancurkan chart lama jika fungsi ini dipanggil berulang kali
-  new Chart(document.getElementById('trendChart'), {
+  if (trendChartInstance) trendChartInstance.destroy()
+
+  trendChartInstance = new Chart(document.getElementById('trendChart'), {
     type: 'line',
     data: {
       labels: labels,
       datasets: [{
         label: 'Total Request',
         data: values,
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+        fill: true,
         tension: 0.3
       }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true
     }
   })
 
@@ -86,47 +98,86 @@ async function loadDashboard() {
     typeMap[type] = (typeMap[type] || 0) + 1
   })
 
-  new Chart(document.getElementById('typeChart'), {
+  if (typeChartInstance) typeChartInstance.destroy()
+
+  typeChartInstance = new Chart(document.getElementById('typeChart'), {
     type: 'bar',
     data: {
       labels: Object.keys(typeMap),
       datasets: [{
         label: 'Jumlah',
-        data: Object.values(typeMap)
+        data: Object.values(typeMap),
+        backgroundColor: '#3b82f6'
       }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true
     }
   })
 
-  // ================= AGING =================
-  let aging1 = 0, aging2 = 0, aging3 = 0
-  const now = new Date()
+  // ================= REVISED NAME CHART =================
+  const nameMap = {}
 
-  pending.forEach(d => {
-    const created = new Date(d.created_at)
-    const diff = (now - created) / (1000 * 60 * 60 * 24)
-
-    if (diff < 1) aging1++
-    else if (diff < 3) aging2++
-    else aging3++
+  data.forEach(d => {
+    const name = d.RevisedName ? d.RevisedName.trim() : 'Unassigned'
+    nameMap[name] = (nameMap[name] || 0) + 1
   })
 
-  document.getElementById('agingList').innerHTML = `
-    <li>< 1 Hari: ${aging1}</li>
-    <li>1 - 3 Hari: ${aging2}</li>
-    <li>> 3 Hari: ${aging3}</li>
-  `
+  // Sort dari count terbanyak
+  const sortedNames = Object.entries(nameMap).sort((a, b) => b[1] - a[1])
+  const nameLabels = sortedNames.map(item => item[0])
+  const nameCounts = sortedNames.map(item => item[1])
+
+  if (revisedNameChartInstance) revisedNameChartInstance.destroy()
+
+  revisedNameChartInstance = new Chart(document.getElementById('revisedNameChart'), {
+    type: 'bar',
+    data: {
+      labels: nameLabels,
+      datasets: [{
+        label: 'Total Revisi Dikerjakan',
+        data: nameCounts,
+        backgroundColor: '#0284c7',
+        borderColor: '#0369a1',
+        borderWidth: 1,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y', // Horizontal Bar Chart agar nama terlihat rapi
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0
+          }
+        }
+      }
+    }
+  })
 }
-// disable klik kanan
+
+// Disable klik kanan
 document.addEventListener('contextmenu', e => e.preventDefault())
 
-// disable F12 & shortcut devtools
+// Disable F12 & shortcut devtools
 document.addEventListener('keydown', function (e) {
   if (
     e.key === 'F12' ||
-    (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key)) ||
-    (e.ctrlKey && e.key === 'U')
+    (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+    (e.ctrlKey && e.key.toUpperCase() === 'U')
   ) {
     e.preventDefault()
   }
 })
+
 loadDashboard()
