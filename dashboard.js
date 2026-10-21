@@ -11,6 +11,37 @@ const tableName = 'ComplainDataOperator'
 let trendChartInstance = null
 let typeChartInstance = null
 let revisedNameChartInstance = null
+let topOperatorChartInstance = null
+
+// Palette Warna Soft & Konsisten
+const softColors = {
+  primary: '#60a5fa',      // Soft Blue
+  primaryBorder: '#3b82f6',
+  secondary: '#38bdf8',    // Soft Sky Blue
+  accent: '#818cf8',       // Soft Indigo
+  success: '#34d399',      // Soft Emerald
+  warning: '#fbbf24',      // Soft Amber
+  slate: '#94a3b8',        // Soft Slate
+  background: 'rgba(96, 165, 250, 0.15)'
+}
+
+// Helper function untuk standardisasi teks SN
+function standardizeText(text) {
+  if (!text) return 'UNKNOWN'
+  return String(text)
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, ' ')
+}
+
+// Helper function untuk format nama tampilan (Capitalized Case)
+function formatDisplayName(text) {
+  if (!text || text === 'UNKNOWN') return 'Unknown Operator'
+  return String(text)
+    .trim()
+    .toLowerCase()
+    .replace(/(^|\s)\S/g, (l) => l.toUpperCase())
+}
 
 async function loadDashboard() {
   let data = []
@@ -26,7 +57,7 @@ async function loadDashboard() {
       .range(from, to)
 
     if (error) {
-      console.error("Gagal mengambil data:", error)
+      console.error("Gagal mengambil data dashboard:", error)
       return
     }
 
@@ -78,15 +109,25 @@ async function loadDashboard() {
       datasets: [{
         label: 'Total Request',
         data: values,
-        borderColor: '#2563eb',
-        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+        borderColor: softColors.primaryBorder,
+        backgroundColor: softColors.background,
         fill: true,
-        tension: 0.3
+        tension: 0.3,
+        borderWidth: 2,
+        pointBackgroundColor: softColors.primaryBorder,
+        pointRadius: 3
       }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { labels: { color: '#334155', font: { family: 'sans-serif' } } }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, grid: { color: '#f1f5f9' } }
+      }
     }
   })
 
@@ -107,12 +148,22 @@ async function loadDashboard() {
       datasets: [{
         label: 'Jumlah',
         data: Object.values(typeMap),
-        backgroundColor: '#3b82f6'
+        backgroundColor: softColors.secondary,
+        borderColor: softColors.primaryBorder,
+        borderWidth: 1,
+        borderRadius: 6
       }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, grid: { color: '#f1f5f9' } }
+      }
     }
   })
 
@@ -120,11 +171,10 @@ async function loadDashboard() {
   const nameMap = {}
 
   data.forEach(d => {
-    const name = d.RevisedName ? d.RevisedName.trim() : 'Unassigned'
-    nameMap[name] = (nameMap[name] || 0) + 1
+    const revName = d.RevisedName ? d.RevisedName.trim() : 'Unassigned'
+    nameMap[revName] = (nameMap[revName] || 0) + 1
   })
 
-  // Sort dari count terbanyak
   const sortedNames = Object.entries(nameMap).sort((a, b) => b[1] - a[1])
   const nameLabels = sortedNames.map(item => item[0])
   const nameCounts = sortedNames.map(item => item[1])
@@ -138,29 +188,92 @@ async function loadDashboard() {
       datasets: [{
         label: 'Total Revisi Dikerjakan',
         data: nameCounts,
-        backgroundColor: '#0284c7',
-        borderColor: '#0369a1',
+        backgroundColor: softColors.accent,
+        borderColor: '#6366f1',
         borderWidth: 1,
         borderRadius: 6
       }]
     },
     options: {
-      indexAxis: 'y', // Horizontal Bar Chart agar nama terlihat rapi
+      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: true,
-          position: 'top'
+        legend: { display: false }
+      },
+      scales: {
+        x: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+        y: { grid: { display: false } }
+      }
+    }
+  })
+
+  // ================= TOP 5 OPERATOR REVISION CHART =================
+  const operatorSNMap = {}
+  const snToNameMap = {}
+
+  data.forEach(d => {
+    // Menyesuaikan variabel kolom SN dan Name dari database
+    const rawSN = d.SN || d.sn
+    const rawName = d.Name || d.name
+    
+    if (!rawSN) return
+
+    const cleanSN = standardizeText(rawSN)
+    const cleanName = formatDisplayName(rawName)
+
+    operatorSNMap[cleanSN] = (operatorSNMap[cleanSN] || 0) + 1
+
+    if (cleanName && cleanName !== 'Unknown Operator') {
+      snToNameMap[cleanSN] = cleanName
+    }
+  })
+
+  const top5Operators = Object.entries(operatorSNMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+
+  const topSNLabels = top5Operators.map(item => item[0])
+  const topCounts = top5Operators.map(item => item[1])
+  const topNames = top5Operators.map(item => snToNameMap[item[0]] || 'Unknown Name')
+
+  if (topOperatorChartInstance) topOperatorChartInstance.destroy()
+
+  topOperatorChartInstance = new Chart(document.getElementById('topOperatorChart'), {
+    type: 'bar',
+    data: {
+      labels: topSNLabels,
+      datasets: [{
+        label: 'Jumlah Revisi',
+        data: topCounts,
+        backgroundColor: softColors.warning,
+        borderColor: '#f59e0b',
+        borderWidth: 1,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: function (context) {
+              const index = context[0].dataIndex
+              const sn = topSNLabels[index]
+              const name = topNames[index]
+              return `SN: ${sn} (${name})`
+            },
+            label: function (context) {
+              return ` Total Revisi: ${context.raw}`
+            }
+          }
         }
       },
       scales: {
-        x: {
-          beginAtZero: true,
-          ticks: {
-            precision: 0
-          }
-        }
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, grid: { color: '#f1f5f9' } }
       }
     }
   })
